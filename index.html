@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShopSwift — Demo E‑commerce</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#121;          /* page background */
+      --card:#121829;        /* card background */
+      --muted:#9aa4bf;       /* muted text */
+      --text:#eef2ff;        /* main text */
+      --brand:#6ee7b7;       /* accent */
+      --brand-2:#22d3ee;     /* secondary accent */
+      --danger:#ef4444;      /* delete */
+      --shadow:0 10px 25px rgba(0,0,0,.25);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#0b0f19 70%,rgba(11,15,25,0));backdrop-filter:saturate(1.2) blur(6px)}
+    .nav{display:flex;align-items:center;gap:16px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
+    .logo{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:radial-gradient(120% 120% at 10% 10%,var(--brand),var(--brand-2));box-shadow:var(--shadow)}
+    .searchbar{flex:1;display:flex;gap:8px;align-items:center;background:var(--card);padding:10px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.06)}
+    .searchbar input{flex:1;background:transparent;border:none;outline:none;color:var(--text)}
+    .pill{padding:10px 14px;border-radius:999px;background:var(--card);border:1px solid rgba(255,255,255,.06);display:flex;gap:10px;align-items:center}
+    .btn{border:none;cursor:pointer;border-radius:12px;padding:10px 14px;font-weight:600;color:#0b0f19;background:linear-gradient(180deg,var(--brand),var(--brand-2));box-shadow:var(--shadow)}
+    .btn.secondary{background:#1f2937;color:var(--text);border:1px solid rgba(255,255,255,.08)}
+
+    /* Hero */
+    .hero{margin-top:18px;border-radius:var(--radius);background:radial-gradient(120% 120% at 0% 0%,#182032 10%,#0f172a 60%,#0b1020 100%);padding:28px;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:center;border:1px solid rgba(255,255,255,.06)}
+    .hero h1{margin:0 0 10px 0;font-size:34px}
+    .hero p{margin:0 0 16px 0;color:var(--muted)}
+    .hero .card{background:rgba(255,255,255,.03);padding:18px;border-radius:16px;border:1px solid rgba(255,255,255,.06)}
+    .badge{display:inline-flex;gap:8px;align-items:center;background:rgba(110,231,183,.15);color:var(--brand);border:1px solid rgba(110,231,183,.35);padding:6px 10px;border-radius:999px;font-size:12px}
+
+    /* Controls */
+    .controls{margin:18px 0;display:flex;gap:12px;flex-wrap:wrap}
+    .controls .control{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid rgba(255,255,255,.06);padding:10px 14px;border-radius:12px}
+    select, .price-input{appearance:none;background:transparent;border:none;outline:none;color:var(--text)}
+
+    /* Grid */
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    @media (max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:800px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.grid{grid-template-columns:1fr}}
+
+    .product{background:var(--card);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column}
+    .thumb{aspect-ratio: 1 / 1;position:relative;background:#0d1326}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .favorite{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2);border-radius:999px;width:36px;height:36px;display:grid;place-items:center;color:#fff;cursor:pointer}
+    .product .body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+    .title{font-weight:700}
+    .price{display:flex;align-items:baseline;gap:8px}
+    .price .now{font-weight:800}
+    .price .old{color:var(--muted);text-decoration:line-through;font-size:12px}
+    .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+    .actions{display:flex;gap:8px;margin-top:auto}
+
+    /* Cart Drawer */
+    .cart-toggle{position:relative}
+    .cart-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;font-size:12px;border:2px solid #0b0f19}
+    .drawer{position:fixed;inset:0;z-index:60;display:none}
+    .drawer.open{display:block}
+    .drawer .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+    .panel{position:absolute;right:0;top:0;bottom:0;width:380px;max-width:92vw;background:#0f172a;border-left:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow);display:flex;flex-direction:column}
+    .panel header{position:sticky;top:0;background:#0f172a;border-bottom:1px solid rgba(255,255,255,.08)}
+    .panel .content{padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+    .cart-item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.03);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
+    .cart-item img{width:56px;height:56px;border-radius:10px;object-fit:cover}
+    .qty{display:flex;align-items:center;gap:8px}
+    .qty button{width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#111827;color:var(--text);cursor:pointer}
+    .empty{color:var(--muted);text-align:center;padding:20px}
+
+    /* Toast */
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;border:1px solid rgba(255,255,255,.12);color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);display:none}
+    .toast.show{display:block}
+
+    /* Footer */
+    footer{margin-top:40px;color:var(--muted);text-align:center}
+    footer a{color:var(--brand)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo">🏷️💎</div>
+        <span>ShopSwift</span>
+      </div>
+      <form class="searchbar" id="searchForm">
+        <input id="searchInput" type="search" placeholder="Search products… (e.g. headphones)" aria-label="Search" />
+        <button class="btn secondary" type="reset" id="clearSearch">Clear</button>
+      </form>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="pill" id="themeToggle" title="Toggle theme">🌑 <span class="hide-sm">Theme</span></button>
+        <button class="pill cart-toggle" id="openCart">🛒 Cart <span class="cart-badge" id="cartCount">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <span class="badge">🔥👽 Mid‑Year Mega Deals — up to 50% off</span>
+        <h1>Discover gadgets you'll <span style="color:var(--brand)">love</span>.</h1>
+        <p>Clean, responsive e‑commerce template with a dynamic product grid, filters, cart drawer and localStorage. Fully client‑side and easy to customize.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn" href="#products">Shop Now</a>
+          <button class="btn secondary" id="scrollBest">See Best Sellers</button>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Quick Filters</strong>
+        <div class="controls" style="margin-top:10px">
+          <div class="control"><label>Category</label>
+            <select id="categorySelect">
+              <option value="all">All</option>
+              <option>Headphones</option>
+              <option>Phones</option>
+              <option>Laptops</option>
+              <option>Accessories</option>
+              <option>Gaming</option>
+              <option>cars</option>
+            </select>
+          </div>
+          <div class="control"><label>Sort</label>
+            <select id="sortSelect">
+              <option value="popularity">Popularity</option>
+              <option value="priceAsc">Price: Low → High</option>
+              <option value="priceDesc">Price: High → Low</option>
+              <option value="newest">Newest</option>
+            </select>
+          </div>
+          <div class="control"><label>Max Price</label>
+            <input id="priceMax" class="price-input" type="range" min="20" max="2500" step="10" value="2500" list="priceTicks">
+            <datalist id="priceTicks">
+              <option value="20"></option>
+              <option value="500"></option>
+              <option value="1000"></option>
+              <option value="1500"></option>
+              <option value="2000"></option>
+              <option value="2500"></option>
+            </datalist>
+            <span id="priceMaxLabel">≤ $2,500</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="products" style="margin-top:22px">
+      <div class="grid" id="productGrid" aria-live="polite"></div>
+    </section>
+
+    <footer>
+      <p>Built with ❤ — single‑file template. Customize freely. <a href="#" id="resetDemo">Reset demo data</a></p>
+    </footer>
+  </main>
+
+  <!-- Cart Drawer -->
+  <aside class="drawer" id="cartDrawer" aria-hidden="true">
+    <div class="backdrop" data-close="drawer"></div>
+    <div class="panel">
+      <header class="container" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+        <strong>🛒 Your Cart</strong>
+        <button class="pill" data-close="drawer">✕ Close</button>
+      </header>
+      <div class="content" id="cartItems"></div>
+      <div style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding:12px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong>Total</strong>
+          <strong id="cartTotal">$0.00</strong>
+        </div>
+        <button class="btn" style="width:100%" id="checkoutBtn">Checkout</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---------- Demo Data ----------
+    const PRODUCTS = [
+      {id:1, title:"Aero X Headphones", category:"Headphones", price:179, old:229, rating:4.7, img:"https://images.unsplash.com/photo-1518444352455-3033c66ab06a?q=80&w=1200&auto=format&fit=crop", date:"2025-07-10"},
+      {id:2, title:"Nova Pro Headset", category:"Gaming", price:129, old:159, rating:4.5, img:"https://images.unsplash.com/photo-1585386959984-a41552231658?q=80&w=1200&auto=format&fit=crop", date:"2025-06-22"},
+      {id:3, title:"PixelOne S Phone", category:"Phones", price:699, old:799, rating:4.6, img:"https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=1200&auto=format&fit=crop", date:"2025-05-2"},
+      {id:4, title:"Ultrabook 14 Air", category:"Laptops", price:1199, old:1399, rating:4.8, img:"https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1200&auto=format&fit=crop", date:"2025-04-18"},
+      {id:5, title:"MagCharge Duo", category:"Accessories", price:59, old:79, rating:4.4, img:"https://images.unsplash.com/photo-1610465299996-30f240ac2b94?q=80&w=1200&auto=format&fit=crop", date:"2025-07-01"},
+      {id:6, title:"Aurora Earbuds", category:"Headphones", price:99, old:129, rating:4.3, img:"https://images.unsplash.com/photo-1552160753-1171598214a1?q=80&w=1200&auto=format&fit=crop", date:"2025-07-28"},
+      {id:7, title:"Falcon 5 Phone", category:"Phones", price:499, old:599, rating:4.1, img:"https://images.unsplash.com/photo-1514626585111-9aa86183ac98?q=80&w=1200&auto=format&fit=crop", date:"2025-03-25"},
+      {id:8, title:"Blade Wireless Mouse", category:"Accessories", price:39, old:49, rating:4.2, img:"https://images.unsplash.com/photo-1542219550-37153d387c63?q=80&w=1200&auto=format&fit=crop", date:"2025-05-29"},
+      {id:9, title:"Glide Mechanical Keyboard", category:"Accessories", price:89, old:109, rating:4.5, img:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&auto=format&fit=crop", date:"2025-02-10"},
+      {id:10, title:"Nebula 15 Pro", category:"Laptops", price:1599, old:1799, rating:4.9, img:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&auto=format&fit=crop", date:"2025-08-01"},
+      {id:11, title:"Orbit VR Starter", category:"Gaming", price:299, old:349, rating:4.0, img:"https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop", date:"2025-07-30"},
+      {id:12, title:"Shield Pro Case", category:"Accessories", price:24, old:null, rating:4.1, img:"https://images.unsplash.com/photo-1609599006353-8c4b87d1a5d7?q=80&w=1200&auto=format&fit=crop", date:"2025-06-05"},
+      {id:13, title:"Rift Controller", category:"Gaming", price:69, old:89, rating:4.2, img:"https://images.unsplash.com/photo-1545235617-9465d2a55698?q=80&w=1200&auto=format&fit=crop", date:"2025-04-30"},
+      {id:14, title:"Cloud ANC Headphones", category:"Headphones", price:219, old:279, rating:4.7, img:"https://images.unsplash.com/photo-1518444352455-3033c66ab06a?q=80&w=1200&auto=format&fit=crop", date:"2025-07-15"},
+      {id:15, title:"Summit 13", category:"Laptops", price:899, old:1049, rating:4.6, img:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&auto=format&fit=crop", date:"2025-01-12"},
+      {id:16, title:"Quantum Power Bank", category:"Accessories", price:39, old:59, rating:4.3, img:"https://images.unsplash.com/photo-1611532736570-876cbbfd8321?q=80&w=1200&auto=format&fit=crop", date:"2025-05-11"}
+    ];
+
+    // ---------- State ----------
+    const state = {
+      products:[...PRODUCTS],
+      cart: JSON.parse(localStorage.getItem('cart')||'{}'),
+      favorites: JSON.parse(localStorage.getItem('favorites')||'[]'),
+      filters:{ q:'', category:'all', priceMax:2500, sort:'popularity' }
+    };
+
+    // ---------- Helpers ----------
+    const $ = (sel,root=document)=>root.querySelector(sel);
+    const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+    const fmt = n => `$${n.toFixed(2)}`;
+
+    function notify(msg){
+      const el = $('#toast');
+      el.textContent = msg; el.classList.add('show');
+      setTimeout(()=>el.classList.remove('show'), 1800);
+    }
+
+    function save(){
+      localStorage.setItem('cart', JSON.stringify(state.cart));
+      localStorage.setItem('favorites', JSON.stringify(state.favorites));
+    }
+
+    // ---------- Rendering ----------
+    function renderProducts(){
+      const grid = $('#productGrid');
+      const {q, category, priceMax, sort} = state.filters;
+
+      let list = state.products.filter(p=>
+        (category==='all' || p.category===category) &&
+        p.price <= priceMax &&
+        p.title.toLowerCase().includes(q)
+      );
+
+      list.sort((a,b)=>{
+        if(sort==='priceAsc') return a.price-b.price;
+        if(sort==='priceDesc') return b.price-a.price;
+        if(sort==='newest') return new Date(b.date)-new Date(a.date);
+        return b.rating - a.rating; // popularity proxy
+      });
+
+      grid.innerHTML = '';
+      if(!list.length){
+        grid.innerHTML = `<p class="empty" style="grid-column:1/-1">No products match your filters.</p>`;
+        return;
+      }
+
+      for(const p of list){
+        const card = document.createElement('article');
+        card.className = 'product';
+        card.innerHTML = `
+          <div class="thumb">
+            <img alt="${p.title}" src="${p.img}" loading="lazy"/>
+            <button class="favorite" data-id="${p.id}" title="Toggle favorite">${state.favorites.includes(p.id)?'💚':'🤍'}</button>
+          </div>
+          <div class="body">
+            <div class="title">${p.title}</div>
+            <div class="meta"><span>${p.category}</span><span>⭐ ${p.rating.toFixed(1)}</span></div>
+            <div class="price"><span class="now">${fmt(p.price)}</span>${p.old?`<span class="old">${fmt(p.old)}</span>`:''}</div>
+            <div class="actions">
+              <button class="btn" data-add="${p.id}">Add to cart</button>
+              <button class="btn secondary" data-view="${p.id}">View</button>
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      }
+    }
+
+    function renderCart(){
+      const box = $('#cartItems');
+      const entries = Object.entries(state.cart);
+      if(!entries.length){
+        box.innerHTML = `<div class="empty">Your cart is empty.</div>`;
+      } else {
+        box.innerHTML = '';
+        for(const [id,qty] of entries){
+          const p = state.products.find(x=>x.id==id);
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <img src="${p.img}" alt="${p.title}">
+            <div>
+              <div style="font-weight:600">${p.title}</div>
+              <div style="color:var(--muted)">${fmt(p.price)} each</div>
+            </div>
+            <div style="text-align:right">
+              <div class="qty">
+                <button data-dec="${id}">−</button>
+                <span>${qty}</span>
+                <button data-inc="${id}">+</button>
+              </div>
+              <button style="margin-top:8px" class="pill" data-remove="${id}">Remove</button>
+            </div>`;
+          box.appendChild(row);
+        }
+      }
+
+      const total = entries.reduce((sum,[id,qty])=>{
+        const p = state.products.find(x=>x.id==id);
+        return sum + p.price*qty;
+      },0);
+      $('#cartTotal').textContent = fmt(total);
+      $('#cartCount').textContent = entries.reduce((n,[,q])=>n+q,0);
+    }
+
+    function openDrawer(open){
+      const d = $('#cartDrawer');
+      d.classList.toggle('open', !!open);
+      d.setAttribute('aria-hidden', open? 'false':'true');
+      if(open) renderCart();
+    }
+
+    // ---------- Events ----------
+    document.addEventListener('click', (e)=>{
+      const t = e.target;
+      if(t.matches('[data-close="drawer"]')) openDrawer(false);
+      if(t.id==='openCart') openDrawer(true);
+
+      // Add to cart
+      const addId = t.getAttribute('data-add');
+      if(addId){
+        state.cart[addId] = (state.cart[addId]||0) + 1;
+        save(); renderCart(); notify('Added to cart');
+      }
+
+      // View product (simple alert for demo)
+      const viewId = t.getAttribute('data-view');
+      if(viewId){
+        const p = state.products.find(x=>x.id==viewId);
+        alert(`${p.title}\n\nCategory: ${p.category}\nPrice: ${fmt(p.price)}\nRating: ${p.rating}`);
+      }
+
+      // Favorites
+      const favId = t.getAttribute('data-id');
+      if(t.classList.contains('favorite')){
+        const idx = state.favorites.indexOf(+favId);
+        if(idx>-1) state.favorites.splice(idx,1); else state.favorites.push(+favId);
+        save(); renderProducts();
+      }
+
+      // Cart qty changes
+      const inc = t.getAttribute('data-inc');
+      const dec = t.getAttribute('data-dec');
+      const rem = t.getAttribute('data-remove');
+      if(inc){ state.cart[inc]++; save(); renderCart(); }
+      if(dec){ state.cart[dec] = Math.max(0,(state.cart[dec]-1)); if(state.cart[dec]===0) delete state.cart[dec]; save(); renderCart(); }
+      if(rem){ delete state.cart[rem]; save(); renderCart(); }
+    });
+
+    // Search & Filters
+    $('#searchForm').addEventListener('submit', e=>e.preventDefault());
+    $('#searchInput').addEventListener('input', e=>{ state.filters.q = e.target.value.trim().toLowerCase(); renderProducts(); });
+    $('#clearSearch').addEventListener('click', ()=>{ $('#searchInput').va
